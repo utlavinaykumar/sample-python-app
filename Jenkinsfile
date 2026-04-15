@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = "us-east-1"
-        AWS_ACCOUNT_ID = "123456789012"   // change this
-        REPO_NAME = "vinay-repo"
-        IMAGE_NAME = "vinay-python-app"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        AWS_REGION = "ap-south-1"
+        AWS_ACCOUNT_ID = "739951718542"   // change this
+        REPO_NAME = " vinay-python-repo"
+        IMAGE_NAME = "sample_python"
+       
         ECR_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}"
     }
 
@@ -14,7 +14,7 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/hanumantharao19/sample-python-app.git'
+                git branch: 'main', url: 'https://github.com/utlavinaykumar/sample-python-app.git'
             }
         }
 
@@ -27,7 +27,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
-                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    docker build -t ${IMAGE_NAME}.
                 """
             }
         }
@@ -53,7 +53,7 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 sh """
-                    docker push ${ECR_URI}:${IMAGE_TAG}
+                    docker push ${ECR_URI}
                     docker push ${ECR_URI}:latest
                 """
             }
@@ -62,7 +62,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ Image pushed to AWS ECR: ${ECR_URI}:${IMAGE_TAG}"
+            echo "✅ Image pushed to AWS ECR: ${ECR_URI}"
         }
         failure {
             echo "❌ Pipeline failed!"
