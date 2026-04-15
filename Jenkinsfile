@@ -2,60 +2,70 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_ID = "second-project-gar" 
-        REGION = "us-central1" 
-        REPO = "my-docker-repo" 
-        IMAGE = "hanu-python-app"
-        GAR_IMAGE = "${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE}"
+        AWS_REGION = "us-east-1"
+        AWS_ACCOUNT_ID = "123456789012"   // change this
+        REPO_NAME = "vinay-repo"
+        IMAGE_NAME = "vinay-python-app"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        ECR_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}"
     }
 
     stages {
+
         stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/hanumantharao19/sample-python-app.git'
             }
         }
 
-        stage('Auth with GCP') {
+        stage('Verify AWS Role') {
             steps {
-                
-                    sh '''
-                        gcloud config set project $PROJECT_ID
-                    '''
-                }
-            
+                sh 'aws sts get-caller-identity'
+            }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh """
-                        docker build -t ${GAR_IMAGE}:${BUILD_NUMBER} .
-                    """
-                }
+                sh """
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                """
             }
         }
 
-        stage('Push to Artifact Registry') {
+        stage('Tag Image') {
             steps {
-                script {
-                    sh """
-                        gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-                        docker push ${GAR_IMAGE}:${BUILD_NUMBER}
-                        docker tag ${GAR_IMAGE}:${BUILD_NUMBER} ${GAR_IMAGE}:latest
-                        docker push ${GAR_IMAGE}:latest
-                    """
-                }
+                sh """
+                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}
+                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:latest
+                """
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                sh """
+                    aws ecr get-login-password --region ${AWS_REGION} | \
+                    docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                """
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                sh """
+                    docker push ${ECR_URI}:${IMAGE_TAG}
+                    docker push ${ECR_URI}:latest
+                """
             }
         }
     }
 
     post {
         success {
-            echo "✅ Successfully built and pushed: ${GAR_IMAGE}:${BUILD_NUMBER}"
+            echo "✅ Image pushed to AWS ECR: ${ECR_URI}:${IMAGE_TAG}"
         }
         failure {
-            echo "❌ Build failed!"
+            echo "❌ Pipeline failed!"
         }
     }
 }
