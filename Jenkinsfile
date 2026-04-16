@@ -6,7 +6,7 @@ pipeline {
         AWS_ACCOUNT_ID = "739951718542"   // change this
         REPO_NAME = " vinay-python-repo"
         IMAGE_NAME = "sample_python"
-       
+         IMAGE_TAG = "latest"
         ECR_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}"
     }
 
