@@ -7,6 +7,7 @@ pipeline {
         REPO_NAME = " vinay-python-repo"
         IMAGE_NAME = "sample_python"
          IMAGE_TAG = "latest"
+         ECR_REPO = "vinay-python-repo"
         ECR_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}"
     }
 
@@ -32,23 +33,23 @@ pipeline {
             }
         }
 
-        stage('Tag Image') {
-            steps {
-                sh """
-                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}
-                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:latest
-                """
-            }
-        }
+       stage('Tag Image') {
+    steps {
+        sh """
+            docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:${IMAGE_TAG}
+            docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ECR_URI}:latest
+        """
+    }
+}
 
-        stage('Login to ECR') {
-            steps {
-                sh """
-                    aws ecr get-login-password --region ${AWS_REGION} | \
-                    docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                """
-            }
-        }
+   stage('Login to ECR') {
+    steps {
+        sh """
+            aws ecr get-login-password --region ${REGION} | \
+            docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
+        """
+    }
+}
 
         stage('Push to ECR') {
             steps {
