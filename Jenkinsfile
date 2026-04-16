@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_REGION = "ap-south-1"
         AWS_ACCOUNT_ID = "739951718542"   // change this
-        REPO_NAME = " vinay-python-repo"
+        REPO_NAME = "vinay-python-repo"
         IMAGE_NAME = "sample_python"
          IMAGE_TAG = "latest"
          ECR_REPO = "vinay-python-repo"
@@ -45,8 +45,8 @@ pipeline {
    stage('Login to ECR') {
     steps {
         sh """
-            aws ecr get-login-password --region ${REGION} | \
-            docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
+            aws ecr get-login-password --region ${AWS_REGION} | \
+            docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
         """
     }
 }
